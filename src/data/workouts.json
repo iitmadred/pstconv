@@ -1,0 +1,169 @@
+{
+  "workouts": [
+    {
+      "id": "morning-activation",
+      "name": "Morning Activation",
+      "icon": "sun",
+      "exercises": [
+        {
+          "id": "jumping-jacks",
+          "name": "Jumping Jacks",
+          "detail": "Full range of motion",
+          "sets": 3,
+          "work": 30,
+          "rest": 15,
+          "type": "cardio"
+        },
+        {
+          "id": "high-knees",
+          "name": "High Knees",
+          "detail": "Drive knees up explosively",
+          "sets": 3,
+          "work": 30,
+          "rest": 15,
+          "type": "cardio"
+        },
+        {
+          "id": "arm-circles",
+          "name": "Arm Circles",
+          "detail": "Forward & backward",
+          "sets": 2,
+          "work": 30,
+          "rest": 10,
+          "type": "cardio"
+        }
+      ]
+    },
+    {
+      "id": "evening-strength-a",
+      "name": "Evening Strength A",
+      "icon": "dumbbell",
+      "routine": "A",
+      "exercises": [
+        {
+          "id": "pushups",
+          "name": "Push-ups",
+          "detail": "Chest to floor",
+          "sets": 4,
+          "work": 45,
+          "rest": 30,
+          "type": "strength"
+        },
+        {
+          "id": "squats",
+          "name": "Squats",
+          "detail": "Deep bodyweight squats",
+          "sets": 4,
+          "work": 45,
+          "rest": 30,
+          "type": "strength"
+        },
+        {
+          "id": "plank",
+          "name": "Plank Hold",
+          "detail": "Core tight, body straight",
+          "sets": 3,
+          "work": 45,
+          "rest": 20,
+          "type": "isometric"
+        },
+        {
+          "id": "lunges",
+          "name": "Walking Lunges",
+          "detail": "Alternating legs",
+          "sets": 3,
+          "work": 40,
+          "rest": 25,
+          "type": "strength"
+        }
+      ]
+    },
+    {
+      "id": "evening-strength-b",
+      "name": "Evening Strength B",
+      "icon": "dumbbell",
+      "routine": "B",
+      "exercises": [
+        {
+          "id": "pike-pushups",
+          "name": "Pike Push-ups",
+          "detail": "Shoulder focus",
+          "sets": 4,
+          "work": 40,
+          "rest": 30,
+          "type": "strength"
+        },
+        {
+          "id": "glute-bridges",
+          "name": "Glute Bridges",
+          "detail": "Squeeze at top",
+          "sets": 4,
+          "work": 45,
+          "rest": 25,
+          "type": "strength"
+        },
+        {
+          "id": "side-plank",
+          "name": "Side Plank",
+          "detail": "Each side",
+          "sets": 3,
+          "work": 30,
+          "rest": 15,
+          "type": "isometric"
+        },
+        {
+          "id": "burpees",
+          "name": "Burpees",
+          "detail": "Full extension",
+          "sets": 3,
+          "work": 30,
+          "rest": 30,
+          "type": "cardio"
+        }
+      ]
+    },
+    {
+      "id": "hiit-blast",
+      "name": "HIIT Blast",
+      "icon": "flame",
+      "exercises": [
+        {
+          "id": "mountain-climbers",
+          "name": "Mountain Climbers",
+          "detail": "Fast pace",
+          "sets": 4,
+          "work": 30,
+          "rest": 15,
+          "type": "cardio"
+        },
+        {
+          "id": "squat-jumps",
+          "name": "Squat Jumps",
+          "detail": "Explosive power",
+          "sets": 4,
+          "work": 25,
+          "rest": 20,
+          "type": "cardio"
+        },
+        {
+          "id": "high-plank-taps",
+          "name": "High Plank Shoulder Taps",
+          "detail": "Minimal hip movement",
+          "sets": 3,
+          "work": 30,
+          "rest": 15,
+          "type": "strength"
+        },
+        {
+          "id": "skaters",
+          "name": "Skater Jumps",
+          "detail": "Side to side",
+          "sets": 3,
+          "work": 30,
+          "rest": 20,
+          "type": "cardio"
+        }
+      ]
+    }
+  ]
+}

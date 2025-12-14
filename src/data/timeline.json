@@ -1,0 +1,189 @@
+{
+  "tasks": [
+    {
+      "id": "wake-up",
+      "title": "Wake Up",
+      "subtitle": "Start the day",
+      "time": "05:30",
+      "type": "habit",
+      "completed": false
+    },
+    {
+      "id": "morning-water",
+      "title": "Morning Water",
+      "subtitle": "16oz with lemon",
+      "time": "05:35",
+      "type": "hydration",
+      "completed": false
+    },
+    {
+      "id": "morning-activation",
+      "title": "Morning Activation",
+      "subtitle": "10 min movement",
+      "time": "06:00",
+      "type": "workout",
+      "completed": false,
+      "meta": {
+        "workoutId": "morning-activation"
+      }
+    },
+    {
+      "id": "breakfast",
+      "title": "Breakfast",
+      "subtitle": "Eggs + Oats + Protein",
+      "time": "06:30",
+      "type": "meal",
+      "completed": false,
+      "meta": {
+        "protein": 40,
+        "calories": 450
+      }
+    },
+    {
+      "id": "creatine",
+      "title": "Creatine",
+      "subtitle": "5g with water",
+      "time": "06:45",
+      "type": "supplement",
+      "completed": false
+    },
+    {
+      "id": "mid-morning-water",
+      "title": "Hydration Check",
+      "subtitle": "Glass of water",
+      "time": "09:00",
+      "type": "hydration",
+      "completed": false
+    },
+    {
+      "id": "snack-1",
+      "title": "Morning Snack",
+      "subtitle": "Greek yogurt + nuts",
+      "time": "10:00",
+      "type": "meal",
+      "completed": false,
+      "meta": {
+        "protein": 25,
+        "calories": 250
+      }
+    },
+    {
+      "id": "lunch",
+      "title": "Lunch",
+      "subtitle": "Chicken + Rice + Veggies",
+      "time": "12:30",
+      "type": "meal",
+      "completed": false,
+      "meta": {
+        "protein": 40,
+        "calories": 550
+      }
+    },
+    {
+      "id": "afternoon-water",
+      "title": "Hydration Check",
+      "subtitle": "Glass of water",
+      "time": "14:00",
+      "type": "hydration",
+      "completed": false
+    },
+    {
+      "id": "snack-2",
+      "title": "Afternoon Snack",
+      "subtitle": "Protein shake",
+      "time": "15:30",
+      "type": "meal",
+      "completed": false,
+      "meta": {
+        "protein": 25,
+        "calories": 200
+      }
+    },
+    {
+      "id": "pre-workout-water",
+      "title": "Pre-Workout Water",
+      "subtitle": "16oz hydration",
+      "time": "17:00",
+      "type": "hydration",
+      "completed": false
+    },
+    {
+      "id": "evening-workout",
+      "title": "Evening Strength",
+      "subtitle": "A/B Routine",
+      "time": "17:30",
+      "type": "workout",
+      "completed": false,
+      "meta": {
+        "workoutId": "evening-strength-a",
+        "routine": "A"
+      }
+    },
+    {
+      "id": "dinner",
+      "title": "Dinner",
+      "subtitle": "Fish + Sweet Potato + Salad",
+      "time": "19:00",
+      "type": "meal",
+      "completed": false,
+      "meta": {
+        "protein": 35,
+        "calories": 500
+      }
+    },
+    {
+      "id": "evening-water",
+      "title": "Evening Water",
+      "subtitle": "Final hydration",
+      "time": "20:00",
+      "type": "hydration",
+      "completed": false
+    },
+    {
+      "id": "casein",
+      "title": "Casein Protein",
+      "subtitle": "Slow release overnight",
+      "time": "21:00",
+      "type": "supplement",
+      "completed": false,
+      "meta": {
+        "protein": 25
+      }
+    },
+    {
+      "id": "sleep-prep",
+      "title": "Sleep Prep",
+      "subtitle": "Wind down routine",
+      "time": "21:30",
+      "type": "habit",
+      "completed": false
+    }
+  ],
+  "nonNegotiables": [
+    {
+      "id": "nn-protein",
+      "label": "Hit 140g protein",
+      "completed": false
+    },
+    {
+      "id": "nn-workout",
+      "label": "Complete workout",
+      "completed": false
+    },
+    {
+      "id": "nn-water",
+      "label": "8 glasses of water",
+      "completed": false
+    },
+    {
+      "id": "nn-sleep",
+      "label": "7+ hours sleep",
+      "completed": false
+    },
+    {
+      "id": "nn-steps",
+      "label": "10k steps",
+      "completed": false
+    }
+  ]
+}

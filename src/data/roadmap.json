@@ -1,0 +1,46 @@
+{
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Foundation",
+      "weeks": "1-4",
+      "focus": "Build habits, establish baseline",
+      "goals": [
+        "Master morning routine",
+        "Hit protein targets consistently",
+        "Complete 4 workouts/week"
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Acceleration",
+      "weeks": "5-8",
+      "focus": "Increase intensity, optimize nutrition",
+      "goals": [
+        "Add progressive overload",
+        "Dial in meal timing",
+        "Track body composition"
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Optimization",
+      "weeks": "9-12",
+      "focus": "Peak performance, fine-tune",
+      "goals": [
+        "Maximize strength gains",
+        "Perfect supplement timing",
+        "Achieve target physique"
+      ]
+    }
+  ],
+  "weeklyFocus": {
+    "monday": "Push Day + HIIT",
+    "tuesday": "Pull Day + Core",
+    "wednesday": "Active Recovery",
+    "thursday": "Legs + Cardio",
+    "friday": "Full Body",
+    "saturday": "Outdoor Activity",
+    "sunday": "Rest & Meal Prep"
+  }
+}
