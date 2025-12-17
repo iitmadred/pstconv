@@ -1,11 +1,6 @@
-// ============================================================
-// STEMMY DAILY LIFESTYLEOS - Main Application
-// Body Recomposition Operating System v2.0
-// ============================================================
-
 import { useEffect, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { ThemeProvider, AppProvider, AuthProvider, useApp } from './contexts';
+import { ThemeProvider, AppProvider, AuthProvider, useApp, useAuth } from './contexts';
 import {
   LoginScreen,
   OnboardingNameScreen,
@@ -23,17 +18,36 @@ import { WORKOUTS } from './data.ts';
 import type { TimerPhase } from './types/index';
 
 // ============================================================
-// Auth Guard Component
+// Auth Guard Component - Strict Supabase Authentication
 // ============================================================
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user } = useApp();
+  const { isAuthenticated, isSupabaseEnabled, loading } = useAuth();
   const location = useLocation();
 
-  // Public routes that don't require auth
-  const publicRoutes = ['/', '/onboarding-name', '/onboarding-goals'];
+  // Show loading while checking auth state
+  if (loading) {
+    return (
+      <div className="dark bg-black min-h-screen flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-white/20 border-t-white rounded-full" />
+      </div>
+    );
+  }
 
-  if (!user.isOnboarded && !publicRoutes.includes(location.pathname)) {
+  // Public routes that don't require auth
+  const publicRoutes = ['/'];
+
+  // If Supabase is enabled, require authentication for all non-public routes
+  if (isSupabaseEnabled && !isAuthenticated && !publicRoutes.includes(location.pathname)) {
     return <Navigate to="/" replace />;
+  }
+
+  // If authenticated but not onboarded, allow only onboarding routes
+  if (isAuthenticated && !user.isOnboarded) {
+    const onboardingRoutes = ['/', '/onboarding-name', '/onboarding-goals'];
+    if (!onboardingRoutes.includes(location.pathname)) {
+      return <Navigate to="/onboarding-name" replace />;
+    }
   }
 
   return <>{children}</>;

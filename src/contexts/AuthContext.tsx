@@ -10,7 +10,8 @@ interface AuthContextType {
     user: User | null;
     session: Session | null;
     loading: boolean;
-    signInWithEmail: (email: string) => Promise<{ error: Error | null }>;
+    signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
+    signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
     signOut: () => Promise<void>;
     isAuthenticated: boolean;
     isSupabaseEnabled: boolean;
@@ -46,16 +47,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return () => subscription.unsubscribe();
     }, []);
 
-    const signInWithEmail = useCallback(async (email: string) => {
+    // Sign up with email and password
+    const signUp = useCallback(async (email: string, password: string) => {
         if (!supabase) {
             return { error: new Error('Supabase not configured') };
         }
 
-        const { error } = await supabase.auth.signInWithOtp({
+        const { error } = await supabase.auth.signUp({
             email,
-            options: {
-                emailRedirectTo: window.location.origin,
-            }
+            password,
+        });
+
+        return { error: error as Error | null };
+    }, []);
+
+    // Sign in with email and password
+    const signIn = useCallback(async (email: string, password: string) => {
+        if (!supabase) {
+            return { error: new Error('Supabase not configured') };
+        }
+
+        const { error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
         });
 
         return { error: error as Error | null };
@@ -72,7 +86,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         session,
         loading,
-        signInWithEmail,
+        signUp,
+        signIn,
         signOut,
         isAuthenticated: !!session,
         isSupabaseEnabled: isSupabaseConfigured,
