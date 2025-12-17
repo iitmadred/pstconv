@@ -93,7 +93,7 @@ export function usePersistedState<T>(
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [key, defaultValue, resetAtMidnight]);
+  }, [key, defaultValue, resetAtMidnight, onReset]);
 
   const reset = useCallback(() => {
     setState(defaultValue);

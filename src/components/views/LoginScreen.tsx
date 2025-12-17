@@ -1,18 +1,68 @@
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useApp } from '../../contexts';
+import { useApp, useAuth } from '../../contexts';
 
 export function LoginScreen() {
     const navigate = useNavigate();
     const { user } = useApp();
+    const { signInWithEmail, isAuthenticated, isSupabaseEnabled, loading: authLoading } = useAuth();
 
-    // If already onboarded, redirect to dashboard
-    const handleLogin = () => {
+    const [email, setEmail] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+    // Check URL params for magic link callback
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('token_hash')) {
+            // Token is handled by AuthContext, just show loading
+            setMessage({ type: 'success', text: 'Verifying your login...' });
+        }
+    }, []);
+
+    // Redirect authenticated users
+    useEffect(() => {
+        if (isAuthenticated && user.isOnboarded) {
+            navigate('/dashboard');
+        } else if (isAuthenticated && !user.isOnboarded) {
+            navigate('/onboarding-name');
+        }
+    }, [isAuthenticated, user.isOnboarded, navigate]);
+
+    // Handle magic link login
+    const handleMagicLink = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email) return;
+
+        setLoading(true);
+        setMessage(null);
+
+        const { error } = await signInWithEmail(email);
+
+        if (error) {
+            setMessage({ type: 'error', text: error.message });
+        } else {
+            setMessage({ type: 'success', text: 'Check your email for the magic link!' });
+        }
+        setLoading(false);
+    };
+
+    // Local-only mode (when Supabase is not configured)
+    const handleLocalLogin = () => {
         if (user.isOnboarded) {
             navigate('/dashboard');
         } else {
             navigate('/onboarding-name');
         }
     };
+
+    if (authLoading) {
+        return (
+            <div className="dark bg-black min-h-screen flex items-center justify-center">
+                <div className="animate-spin w-8 h-8 border-2 border-white/20 border-t-white rounded-full" />
+            </div>
+        );
+    }
 
     return (
         <div className="dark bg-[#000000] antialiased min-h-screen text-[#F5F5F7]" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -26,56 +76,81 @@ export function LoginScreen() {
                             {user.isOnboarded ? `Welcome Back, ${user.name}` : 'Welcome'}
                         </h1>
                         <p className="text-[#8A8A8E]">
-                            {user.isOnboarded ? 'Continue your journey' : 'Log in to your Stemmy'}
+                            {isSupabaseEnabled
+                                ? 'Sign in with your email'
+                                : user.isOnboarded ? 'Continue your journey' : 'Get started with Stemmy'}
                         </p>
                     </div>
+
+                    {/* Message Display */}
+                    {message && (
+                        <div className={`w-full p-4 rounded-xl text-sm ${message.type === 'success'
+                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                            }`}>
+                            {message.text}
+                        </div>
+                    )}
+
                     <div className="w-full space-y-6">
-                        {!user.isOnboarded && (
-                            <>
+                        {isSupabaseEnabled ? (
+                            /* Supabase Magic Link Login */
+                            <form onSubmit={handleMagicLink} className="space-y-4">
                                 <div className="flex flex-col space-y-2">
                                     <label className="text-sm font-medium text-[#F5F5F7]" htmlFor="email">Email Address</label>
                                     <div className="glassmorphic focus-glow flex h-14 w-full items-center rounded-xl transition-all duration-300" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                                         <span className="material-symbols-outlined pl-4 pr-3 text-[#8A8A8E]">mail</span>
-                                        <input className="form-input h-full flex-1 border-none bg-transparent p-0 text-[#F5F5F7] placeholder-[#8A8A8E] focus:outline-none focus:ring-0" id="email" placeholder="your@email.com" type="email" />
+                                        <input
+                                            className="form-input h-full flex-1 border-none bg-transparent p-0 text-[#F5F5F7] placeholder-[#8A8A8E] focus:outline-none focus:ring-0"
+                                            id="email"
+                                            placeholder="your@email.com"
+                                            type="email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            required
+                                        />
                                     </div>
                                 </div>
-                                <div className="flex flex-col space-y-2">
-                                    <label className="text-sm font-medium text-[#F5F5F7]" htmlFor="password">Password</label>
-                                    <div className="glassmorphic focus-glow flex h-14 w-full items-center rounded-xl transition-all duration-300" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                                        <span className="material-symbols-outlined pl-4 pr-3 text-[#8A8A8E]">lock</span>
-                                        <input className="form-input h-full flex-1 border-none bg-transparent p-0 text-[#F5F5F7] placeholder-[#8A8A8E] focus:outline-none focus:ring-0" id="password" placeholder="••••••••" type="password" />
-                                        <button aria-label="Toggle password visibility" className="flex h-full items-center justify-center px-4 text-[#8A8A8E]">
-                                            <span className="material-symbols-outlined">visibility_off</span>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="flex justify-end">
-                                    <a className="text-sm font-medium text-[#8A8A8E] transition-colors hover:text-[#F5F5F7]" href="#">Forgot Password?</a>
-                                </div>
-                            </>
-                        )}
-                        <button onClick={handleLogin} className="glassmorphic button-glow flex h-14 w-full items-center justify-center rounded-xl bg-white/10 text-base font-bold text-[#F5F5F7] transition-all duration-300 hover:bg-white/20 active:scale-95" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                            {user.isOnboarded ? 'Continue' : 'Log In'}
-                        </button>
-                    </div>
-                    {!user.isOnboarded && (
-                        <>
-                            <div className="flex w-full items-center gap-4">
-                                <div className="h-px flex-1 bg-white/10"></div>
-                                <span className="text-sm text-[#8A8A8E]">OR</span>
-                                <div className="h-px flex-1 bg-white/10"></div>
-                            </div>
-                            <button className="glassmorphic flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-white/5 text-base font-medium text-[#F5F5F7] transition-all duration-300 hover:bg-white/10 active:scale-95" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
-                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.5714 12.2727C22.5714 11.4545 22.5 10.6364 22.3571 9.81818H12V14.4545H18.0714C17.7857 16.0909 16.7143 17.5455 15.0714 18.5455V21.1818H18.8571C21.0714 19.1818 22.5714 16.0 22.5714 12.2727Z" fill="#4285F4"></path><path d="M12 23C14.9286 23 17.4286 22.0909 19.3571 20.2727L15.5714 17.6364C14.5714 18.3636 13.3571 18.8182 12 18.8182C9.42857 18.8182 7.21429 17.1818 6.35714 15H2.42857V17.7273C4.35714 20.8182 7.92857 23 12 23Z" fill="#34A853"></path><path d="M6.35714 15C6.14286 14.3636 6 13.6364 6 13C6 12.3636 6.14286 11.6364 6.35714 11V8.27273H2.42857C1.5 10 1 11.5 1 13C1 14.5 1.5 16 2.42857 17.7273L6.35714 15Z" fill="#FBBC05"></path><path d="M12 7.18182C13.5714 7.18182 14.9286 7.63636 16.0714 8.63636L19.4286 5.27273C17.4286 3.36364 14.9286 2 12 2C7.92857 2 4.35714 4.18182 2.42857 7.27273L6.35714 10C7.21429 7.81818 9.42857 6.18182 12 6.18182V7.18182Z" fill="#EA4335"></path></svg>
-                                Continue with Google
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="glassmorphic button-glow flex h-14 w-full items-center justify-center rounded-xl bg-emerald-500/20 text-base font-bold text-emerald-400 transition-all duration-300 hover:bg-emerald-500/30 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    style={{ border: '1px solid rgba(16, 185, 129, 0.3)' }}
+                                >
+                                    {loading ? (
+                                        <div className="animate-spin w-5 h-5 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full" />
+                                    ) : (
+                                        <>
+                                            <span className="material-symbols-outlined mr-2">magic_button</span>
+                                            Send Magic Link
+                                        </>
+                                    )}
+                                </button>
+                            </form>
+                        ) : (
+                            /* Local-only mode */
+                            <button
+                                onClick={handleLocalLogin}
+                                className="glassmorphic button-glow flex h-14 w-full items-center justify-center rounded-xl bg-white/10 text-base font-bold text-[#F5F5F7] transition-all duration-300 hover:bg-white/20 active:scale-95"
+                                style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
+                            >
+                                {user.isOnboarded ? 'Continue' : 'Get Started'}
                             </button>
-                            <p className="text-center text-sm text-[#8A8A8E]">
-                                Don't have an account? <Link to="/onboarding-name" className="font-bold text-[#F5F5F7] transition-colors hover:text-white">Sign Up</Link>
-                            </p>
-                        </>
+                        )}
+                    </div>
+
+                    {!user.isOnboarded && (
+                        <p className="text-center text-sm text-[#8A8A8E]">
+                            {isSupabaseEnabled ? (
+                                <>No password needed. We'll send you a magic link.</>
+                            ) : (
+                                <>New here? <Link to="/onboarding-name" className="font-bold text-[#F5F5F7] transition-colors hover:text-white">Sign Up</Link></>
+                            )}
+                        </p>
                     )}
                 </div>
             </div>
         </div>
     );
 }
+

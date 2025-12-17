@@ -3,9 +3,20 @@
 // Centralizes user profile, daily tracking, and workout stats
 // ============================================================
 
-import { createContext, useContext, useCallback, useEffect, ReactNode, useMemo } from 'react';
+import { createContext, useContext, useCallback, useEffect, ReactNode, useMemo, useRef, useState } from 'react';
 import { usePersistedState, useSimplePersistedState } from '../hooks/usePersistedState';
 import { DAILY_TASKS, NON_NEGOTIABLES, WORKOUTS } from '../data';
+import { useAuth } from './AuthContext';
+import {
+    syncProfile,
+    syncDailyState,
+    syncHistory,
+    syncWorkoutStats,
+    syncCustomWorkouts,
+    syncWorkoutHistoryItems,
+    loadAllUserData,
+    debouncedSync,
+} from '../services/supabaseSync';
 import type {
     Task,
     WorkoutPreset,
@@ -133,6 +144,11 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 // Provider Component
 // ============================================================
 export function AppProvider({ children }: { children: ReactNode }) {
+    // --- Auth State ---
+    const { user: authUser, isAuthenticated, isSupabaseEnabled } = useAuth();
+    const [isDataLoaded, setIsDataLoaded] = useState(false);
+    const initialLoadDone = useRef(false);
+
     // --- Persisted State (permanent) ---
     const [user, setUser] = useSimplePersistedState<UserProfile>('stemmy-user', DEFAULT_USER);
     const [stats, setStats] = useSimplePersistedState<WorkoutStats>('stemmy-stats', DEFAULT_STATS);
@@ -142,13 +158,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const saveDailyProgress = useCallback((staleDaily: DailyState, staleDate: string) => {
         // Calculate daily stats to save
         const dayWorkouts = stats.history.filter(w => w.date.startsWith(staleDate));
+        const totalDuration = dayWorkouts.reduce((acc, w) => acc + w.duration, 0);
 
         const record: HistoryRecord = {
             date: staleDate,
             workout: {
                 count: dayWorkouts.length,
-                duration: dayWorkouts.reduce((acc, w) => acc + w.duration, 0),
-                calories: Math.round(dayWorkouts.reduce((acc, w) => acc + w.duration, 0) / 60 * 10),
+                duration: totalDuration,
+                calories: Math.round(totalDuration / 60 * 10),
             },
             nutrition: {
                 protein: staleDaily.protein.current,
@@ -197,6 +214,116 @@ export function AppProvider({ children }: { children: ReactNode }) {
             setDaily(prev => ({ ...prev, tasks: filteredTasks }));
         }
     }, [user.isOnboarded, user.routine, daily.tasks.length, setDaily]);
+
+    // ============================================================
+    // SUPABASE SYNC: Load data on authentication
+    // ============================================================
+    useEffect(() => {
+        if (!isSupabaseEnabled || !isAuthenticated || !authUser?.id || initialLoadDone.current) return;
+
+        const loadData = async () => {
+            console.log('[Supabase] Loading user data...');
+            const {
+                profile,
+                daily: cloudDaily,
+                history: cloudHistory,
+                stats: cloudStats,
+                customWorkouts: cloudWorkouts,
+                workoutHistory: cloudWorkoutHistory
+            } = await loadAllUserData(authUser.id);
+
+            // Merge cloud data with local (cloud takes precedence)
+            if (profile) {
+                setUser(prev => ({
+                    ...prev,
+                    name: profile.name || prev.name,
+                    email: profile.email || prev.email,
+                    goal: (profile.goal as UserProfile['goal']) || prev.goal,
+                    routine: (profile.routine as UserProfile['routine']) || prev.routine,
+                    weight: profile.weight || prev.weight,
+                    height: profile.height || prev.height,
+                    age: profile.age || prev.age,
+                    isOnboarded: true, // If profile exists in cloud, user is onboarded
+                }));
+            }
+
+            if (cloudDaily) {
+                setDaily(cloudDaily);
+            }
+
+            if (cloudHistory && cloudHistory.length > 0) {
+                setHistory(cloudHistory);
+            }
+
+            if (cloudWorkouts && cloudWorkouts.length > 0) {
+                setCustomWorkouts(cloudWorkouts);
+            }
+
+            if (cloudStats) {
+                setStats(prev => ({
+                    ...prev,
+                    ...cloudStats,
+                    history: cloudWorkoutHistory && cloudWorkoutHistory.length > 0 ? cloudWorkoutHistory : prev.history
+                }));
+            }
+
+            initialLoadDone.current = true;
+            setIsDataLoaded(true);
+            console.log('[Supabase] Data loaded successfully');
+        };
+
+        loadData();
+    }, [isSupabaseEnabled, isAuthenticated, authUser?.id, setUser, setDaily, setHistory, setStats]);
+
+    // ============================================================
+    // SUPABASE SYNC: Sync profile changes
+    // ============================================================
+    useEffect(() => {
+        if (!isSupabaseEnabled || !isAuthenticated || !authUser?.id || !isDataLoaded) return;
+
+        debouncedSync('profile', () => syncProfile(authUser.id, user));
+    }, [isSupabaseEnabled, isAuthenticated, authUser?.id, isDataLoaded, user]);
+
+    // ============================================================
+    // SUPABASE SYNC: Sync daily state changes
+    // ============================================================
+    useEffect(() => {
+        if (!isSupabaseEnabled || !isAuthenticated || !authUser?.id || !isDataLoaded) return;
+
+        debouncedSync('daily', () => syncDailyState(authUser.id, daily));
+    }, [isSupabaseEnabled, isAuthenticated, authUser?.id, isDataLoaded, daily]);
+
+    // ============================================================
+    // SUPABASE SYNC: Sync history changes
+    // ============================================================
+    useEffect(() => {
+        if (!isSupabaseEnabled || !isAuthenticated || !authUser?.id || !isDataLoaded) return;
+
+        debouncedSync('history', () => syncHistory(authUser.id, history));
+    }, [isSupabaseEnabled, isAuthenticated, authUser?.id, isDataLoaded, history]);
+
+    // ============================================================
+    // SUPABASE SYNC: Sync workout stats and history changes
+    // ============================================================
+    useEffect(() => {
+        if (!isSupabaseEnabled || !isAuthenticated || !authUser?.id || !isDataLoaded) return;
+
+        debouncedSync('stats', async () => {
+            await Promise.all([
+                syncWorkoutStats(authUser.id, stats),
+                syncWorkoutHistoryItems(authUser.id, stats.history)
+            ]);
+        });
+    }, [isSupabaseEnabled, isAuthenticated, authUser?.id, isDataLoaded, stats]);
+
+    // ============================================================
+    // SUPABASE SYNC: Sync custom workouts
+    // ============================================================
+    useEffect(() => {
+        if (!isSupabaseEnabled || !isAuthenticated || !authUser?.id || !isDataLoaded) return;
+
+        debouncedSync('customWorkouts', () => syncCustomWorkouts(authUser.id, customWorkouts));
+    }, [isSupabaseEnabled, isAuthenticated, authUser?.id, isDataLoaded, customWorkouts]);
 
     // --- User Actions ---
     const updateUser = useCallback((updates: Partial<UserProfile>) => {
@@ -262,19 +389,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
             ...task,
             id: `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         };
-        setDaily(prev => ({
-            ...prev,
-            tasks: [...prev.tasks, newTask].sort((a, b) => a.time.localeCompare(b.time))
-        }));
+        setDaily(prev => {
+            // Binary insert for O(n) instead of O(n log n) sort
+            const tasks = [...prev.tasks];
+            const insertIndex = tasks.findIndex(t => t.time > newTask.time);
+            if (insertIndex === -1) tasks.push(newTask);
+            else tasks.splice(insertIndex, 0, newTask);
+            return { ...prev, tasks };
+        });
     }, [setDaily]);
 
     const updateTask = useCallback((taskId: string, updates: Partial<Task>) => {
-        setDaily(prev => ({
-            ...prev,
-            tasks: prev.tasks.map(task =>
+        setDaily(prev => {
+            const updatedTasks = prev.tasks.map(task =>
                 task.id === taskId ? { ...task, ...updates } : task
-            ).sort((a, b) => a.time.localeCompare(b.time))
-        }));
+            );
+            // Only re-sort if time changed
+            if (updates.time) {
+                updatedTasks.sort((a, b) => a.time.localeCompare(b.time));
+            }
+            return { ...prev, tasks: updatedTasks };
+        });
     }, [setDaily]);
 
     const deleteTask = useCallback((taskId: string) => {
@@ -394,6 +529,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // --- Cleanup & Migration Effect ---
     useEffect(() => {
         // Fix for "7/5" prayers issue (deduplication & type migration)
+        if (daily.prayers.length === 0) return;
+
+        // Early exit: check if migration is needed before doing work
+        const needsMigration = daily.prayers.some(p => typeof p === 'string');
+        const ids = daily.prayers.map(p => typeof p === 'string' ? p : p.id);
+        const hasDuplicates = new Set(ids).size !== daily.prayers.length;
+        if (!needsMigration && !hasDuplicates) return;
+
         if (daily.prayers.length > 0) {
             const uniquePrayers = new Map();
             let hasChanges = false;

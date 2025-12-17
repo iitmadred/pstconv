@@ -5,7 +5,7 @@
 
 import { useEffect, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { ThemeProvider, AppProvider, useApp } from './contexts';
+import { ThemeProvider, AppProvider, AuthProvider, useApp } from './contexts';
 import {
   LoginScreen,
   OnboardingNameScreen,
@@ -162,11 +162,13 @@ function AppRoutes() {
 function App() {
   return (
     <ThemeProvider>
-      <AppProvider>
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </AppProvider>
+      <AuthProvider>
+        <AppProvider>
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </AppProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

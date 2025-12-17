@@ -72,6 +72,13 @@ const RadarChart = ({ data }: { data: { strength: number; spirit: number; mind: 
 };
 
 const Heatmap = ({ history }: { history: any[] }) => {
+    // Build lookup map once - O(n) instead of O(126*n) find() calls
+    const historyMap = useMemo(() => {
+        const map = new Map<string, any>();
+        history.forEach(h => map.set(h.date, h));
+        return map;
+    }, [history]);
+
     // Generate last 126 days (18 weeks)
     const days = useMemo(() => {
         const d = [];
@@ -81,7 +88,7 @@ const Heatmap = ({ history }: { history: any[] }) => {
             date.setDate(today.getDate() - i);
             const dateStr = date.toISOString().split('T')[0];
 
-            const record = history.find(h => h.date === dateStr);
+            const record = historyMap.get(dateStr);
             let score = 0;
             if (record) {
                 // Calculate rough score
@@ -97,7 +104,7 @@ const Heatmap = ({ history }: { history: any[] }) => {
             d.push({ date: dateStr, score });
         }
         return d;
-    }, [history]);
+    }, [historyMap]);
 
     const getColor = (score: number) => {
         if (score === 0) return 'bg-white/5';
