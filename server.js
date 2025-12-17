@@ -12,7 +12,8 @@ const port = process.env.PORT || 3000;
 app.use(express.static(join(__dirname, 'dist')));
 
 // Handle client-side routing by serving index.html for all other routes
-app.get('*', (req, res) => {
+// Using a middleware for catch-all fallback (Express 5 compatible)
+app.use((req, res) => {
     res.sendFile(join(__dirname, 'dist', 'index.html'));
 });
 
