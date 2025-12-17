@@ -9,6 +9,7 @@ export { StatsScreen } from './StatsScreen';
 export { ProfileScreen } from './ProfileScreen';
 export { WorkoutManagerScreen } from './WorkoutManagerScreen';
 export { AnalyticsScreen } from './AnalyticsScreen';
+export { AuthCallback } from './AuthCallback';
 // Legacy - can be removed if verified unused
 // export { PlannerView } from './PlannerView';
 // export { DashboardView } from './DashboardView';

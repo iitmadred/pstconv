@@ -11,7 +11,8 @@ import {
   StatsScreen,
   ProfileScreen,
   WorkoutManagerScreen,
-  AnalyticsScreen
+  AnalyticsScreen,
+  AuthCallback
 } from './components/views';
 import { useTimer, useAudio, useWakeLock } from './hooks/index';
 import { WORKOUTS } from './data.ts';
@@ -35,7 +36,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   // Public routes that don't require auth
-  const publicRoutes = ['/'];
+  const publicRoutes = ['/', '/auth/callback'];
 
   // If Supabase is enabled, require authentication for all non-public routes
   if (isSupabaseEnabled && !isAuthenticated && !publicRoutes.includes(location.pathname)) {
@@ -137,6 +138,7 @@ function AppRoutes() {
         <Route path="/" element={<LoginScreen />} />
         <Route path="/onboarding-name" element={<OnboardingNameScreen />} />
         <Route path="/onboarding-goals" element={<OnboardingGoalsScreen />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
 
         <Route path="/dashboard" element={<DashboardScreen />} />
 

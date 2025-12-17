@@ -2,12 +2,25 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, useAuth } from '../../contexts';
 
-type AuthMode = 'login' | 'signup';
+type AuthMode = 'login' | 'signup' | 'forgot';
+
+// Map Supabase error messages to user-friendly messages
+const getErrorMessage = (error: string): string => {
+    const errorMap: Record<string, string> = {
+        'Invalid login credentials': 'Email or password is incorrect',
+        'User already registered': 'An account with this email already exists',
+        'Email not confirmed': 'Please check your email and confirm your account first',
+        'Password should be at least 6 characters': 'Password must be at least 6 characters',
+        'Unable to validate email address: invalid format': 'Please enter a valid email address',
+        'For security purposes, you can only request this once every 60 seconds': 'Please wait a moment before trying again',
+    };
+    return errorMap[error] || error;
+};
 
 export function LoginScreen() {
     const navigate = useNavigate();
     const { user } = useApp();
-    const { signIn, signUp, isAuthenticated, isSupabaseEnabled, loading: authLoading } = useAuth();
+    const { signIn, signUp, resetPassword, isAuthenticated, isSupabaseEnabled, loading: authLoading } = useAuth();
 
     const [mode, setMode] = useState<AuthMode>('login');
     const [email, setEmail] = useState('');
@@ -28,42 +41,61 @@ export function LoginScreen() {
     // Handle form submission
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!email || !password) return;
+        if (!email) return;
+
+        setLoading(true);
+        setMessage(null);
+
+        // Handle forgot password
+        if (mode === 'forgot') {
+            const { error } = await resetPassword(email);
+            if (error) {
+                setMessage({ type: 'error', text: getErrorMessage(error.message) });
+            } else {
+                setMessage({ type: 'success', text: 'Password reset email sent! Check your inbox.' });
+            }
+            setLoading(false);
+            return;
+        }
+
+        if (!password) {
+            setLoading(false);
+            return;
+        }
 
         // Validation for signup
         if (mode === 'signup') {
             if (password.length < 6) {
                 setMessage({ type: 'error', text: 'Password must be at least 6 characters' });
+                setLoading(false);
                 return;
             }
             if (password !== confirmPassword) {
                 setMessage({ type: 'error', text: 'Passwords do not match' });
+                setLoading(false);
                 return;
             }
         }
 
-        setLoading(true);
-        setMessage(null);
-
         if (mode === 'login') {
             const { error } = await signIn(email, password);
             if (error) {
-                setMessage({ type: 'error', text: error.message });
+                setMessage({ type: 'error', text: getErrorMessage(error.message) });
             }
         } else {
-            const { error } = await signUp(email, password);
+            const { error, needsConfirmation } = await signUp(email, password);
             if (error) {
-                setMessage({ type: 'error', text: error.message });
-            } else {
-                setMessage({ type: 'success', text: 'Account created! Please check your email to confirm.' });
+                setMessage({ type: 'error', text: getErrorMessage(error.message) });
+            } else if (needsConfirmation) {
+                setMessage({ type: 'success', text: 'Account created! Please check your email to confirm your account.' });
             }
         }
         setLoading(false);
     };
 
-    // Toggle between login and signup
-    const toggleMode = () => {
-        setMode(mode === 'login' ? 'signup' : 'login');
+    // Mode switching
+    const switchMode = (newMode: AuthMode) => {
+        setMode(newMode);
         setMessage(null);
         setPassword('');
         setConfirmPassword('');
@@ -110,13 +142,19 @@ export function LoginScreen() {
                     {/* Header */}
                     <div className="flex flex-col items-center space-y-4 text-center">
                         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/20 ring-1 ring-emerald-500/30">
-                            <span className="material-symbols-outlined text-4xl text-emerald-400">shield</span>
+                            <span className="material-symbols-outlined text-4xl text-emerald-400">
+                                {mode === 'forgot' ? 'lock_reset' : 'shield'}
+                            </span>
                         </div>
                         <h1 className="text-3xl font-bold tracking-tight text-[#F5F5F7]">
-                            {mode === 'login' ? 'Welcome Back' : 'Create Account'}
+                            {mode === 'login' ? 'Welcome Back' :
+                                mode === 'signup' ? 'Create Account' :
+                                    'Reset Password'}
                         </h1>
                         <p className="text-[#8A8A8E]">
-                            {mode === 'login' ? 'Sign in to continue' : 'Sign up to get started'}
+                            {mode === 'login' ? 'Sign in to continue' :
+                                mode === 'signup' ? 'Sign up to get started' :
+                                    'Enter your email to reset password'}
                         </p>
                     </div>
 
@@ -149,23 +187,25 @@ export function LoginScreen() {
                             </div>
                         </div>
 
-                        {/* Password Field */}
-                        <div className="flex flex-col space-y-2">
-                            <label className="text-sm font-medium text-[#F5F5F7]" htmlFor="password">Password</label>
-                            <div className="flex h-14 w-full items-center rounded-xl transition-all duration-300" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                                <span className="material-symbols-outlined pl-4 pr-3 text-[#8A8A8E]">lock</span>
-                                <input
-                                    className="h-full flex-1 border-none bg-transparent p-0 text-[#F5F5F7] placeholder-[#8A8A8E] focus:outline-none focus:ring-0"
-                                    id="password"
-                                    placeholder="••••••••"
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                    minLength={6}
-                                />
+                        {/* Password Field (not shown for forgot mode) */}
+                        {mode !== 'forgot' && (
+                            <div className="flex flex-col space-y-2">
+                                <label className="text-sm font-medium text-[#F5F5F7]" htmlFor="password">Password</label>
+                                <div className="flex h-14 w-full items-center rounded-xl transition-all duration-300" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                                    <span className="material-symbols-outlined pl-4 pr-3 text-[#8A8A8E]">lock</span>
+                                    <input
+                                        className="h-full flex-1 border-none bg-transparent p-0 text-[#F5F5F7] placeholder-[#8A8A8E] focus:outline-none focus:ring-0"
+                                        id="password"
+                                        placeholder="••••••••"
+                                        type="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                        minLength={6}
+                                    />
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Confirm Password Field (Signup only) */}
                         {mode === 'signup' && (
@@ -187,6 +227,19 @@ export function LoginScreen() {
                             </div>
                         )}
 
+                        {/* Forgot Password Link (Login mode only) */}
+                        {mode === 'login' && (
+                            <div className="flex justify-end">
+                                <button
+                                    type="button"
+                                    onClick={() => switchMode('forgot')}
+                                    className="text-sm text-[#8A8A8E] hover:text-emerald-400 transition-colors"
+                                >
+                                    Forgot Password?
+                                </button>
+                            </div>
+                        )}
+
                         {/* Submit Button */}
                         <button
                             type="submit"
@@ -199,22 +252,37 @@ export function LoginScreen() {
                             ) : (
                                 <>
                                     <span className="material-symbols-outlined mr-2">
-                                        {mode === 'login' ? 'login' : 'person_add'}
+                                        {mode === 'login' ? 'login' :
+                                            mode === 'signup' ? 'person_add' :
+                                                'mail'}
                                     </span>
-                                    {mode === 'login' ? 'Sign In' : 'Create Account'}
+                                    {mode === 'login' ? 'Sign In' :
+                                        mode === 'signup' ? 'Create Account' :
+                                            'Send Reset Link'}
                                 </>
                             )}
                         </button>
                     </form>
 
-                    {/* Toggle Mode */}
-                    <p className="text-center text-sm text-[#8A8A8E]">
-                        {mode === 'login' ? (
-                            <>Don't have an account? <button onClick={toggleMode} className="font-bold text-emerald-400 hover:text-emerald-300 transition-colors">Sign Up</button></>
+                    {/* Mode Toggle */}
+                    <div className="flex flex-col items-center space-y-2">
+                        {mode === 'forgot' ? (
+                            <button
+                                onClick={() => switchMode('login')}
+                                className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
+                            >
+                                ← Back to Sign In
+                            </button>
                         ) : (
-                            <>Already have an account? <button onClick={toggleMode} className="font-bold text-emerald-400 hover:text-emerald-300 transition-colors">Sign In</button></>
+                            <p className="text-center text-sm text-[#8A8A8E]">
+                                {mode === 'login' ? (
+                                    <>Don't have an account? <button onClick={() => switchMode('signup')} className="font-bold text-emerald-400 hover:text-emerald-300 transition-colors">Sign Up</button></>
+                                ) : (
+                                    <>Already have an account? <button onClick={() => switchMode('login')} className="font-bold text-emerald-400 hover:text-emerald-300 transition-colors">Sign In</button></>
+                                )}
+                            </p>
                         )}
-                    </p>
+                    </div>
                 </div>
             </div>
         </div>

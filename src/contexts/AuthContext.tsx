@@ -4,15 +4,16 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import type { User, Session } from '@supabase/supabase-js';
+import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 
 interface AuthContextType {
     user: User | null;
     session: Session | null;
     loading: boolean;
-    signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
+    signUp: (email: string, password: string) => Promise<{ error: Error | null; needsConfirmation?: boolean }>;
     signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
     signOut: () => Promise<void>;
+    resetPassword: (email: string) => Promise<{ error: Error | null }>;
     isAuthenticated: boolean;
     isSupabaseEnabled: boolean;
 }
@@ -37,28 +38,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setLoading(false);
         });
 
-        // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        // Listen for auth changes with proper event handling
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session) => {
+            console.log('Auth event:', event);
+
             setSession(session);
             setUser(session?.user ?? null);
             setLoading(false);
+
+            // Handle specific events
+            if (event === 'SIGNED_OUT') {
+                // Clear any cached data
+                setSession(null);
+                setUser(null);
+            } else if (event === 'TOKEN_REFRESHED') {
+                console.log('Token refreshed successfully');
+            } else if (event === 'USER_UPDATED') {
+                console.log('User profile updated');
+            }
         });
 
         return () => subscription.unsubscribe();
     }, []);
 
-    // Sign up with email and password
+    // Sign up with email and password - includes redirect URL
     const signUp = useCallback(async (email: string, password: string) => {
         if (!supabase) {
-            return { error: new Error('Supabase not configured') };
+            return { error: new Error('Supabase not configured'), needsConfirmation: false };
         }
 
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
             email,
             password,
+            options: {
+                emailRedirectTo: `${window.location.origin}/auth/callback`
+            }
         });
 
-        return { error: error as Error | null };
+        // Check if email confirmation is required
+        const needsConfirmation = !!(data?.user && !data?.session);
+
+        return { error: error as Error | null, needsConfirmation };
     }, []);
 
     // Sign in with email and password
@@ -70,6 +90,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { error } = await supabase.auth.signInWithPassword({
             email,
             password,
+        });
+
+        return { error: error as Error | null };
+    }, []);
+
+    // Password reset
+    const resetPassword = useCallback(async (email: string) => {
+        if (!supabase) {
+            return { error: new Error('Supabase not configured') };
+        }
+
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/auth/callback?type=recovery`
         });
 
         return { error: error as Error | null };
@@ -89,6 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signUp,
         signIn,
         signOut,
+        resetPassword,
         isAuthenticated: !!session,
         isSupabaseEnabled: isSupabaseConfigured,
     };
