@@ -72,26 +72,82 @@ html.dark body {
     background-color: #000000;
     color: #f3f4f6;
 }
+
 /* Animations */
 @keyframes slide-up {
-    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
 }
-.animate-slide-up { animation: slide-up 0.25s ease-out forwards; }
+
+.animate-slide-up {
+    animation: slide-up 0.25s ease-out forwards;
+}
 
 /* AI Popup Animations */
 @keyframes popup-in {
-    from { opacity: 0; transform: scale(0.95) translateY(10px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
+
 @keyframes shrink-bar {
-    from { width: 100%; }
-    to { width: 0%; }
+    from {
+        width: 100%;
+    }
+
+    to {
+        width: 0%;
+    }
 }
+
 @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
-.animate-popup-in { animation: popup-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-.animate-shrink-bar { animation: shrink-bar linear forwards; }
-.animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
+
+.animate-popup-in {
+    animation: popup-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-shrink-bar {
+    animation: shrink-bar linear forwards;
+}
+
+.animate-fade-in {
+    animation: fade-in 0.2s ease-out forwards;
+}
+
+/* Slide up without translateX (for flex centered modals) */
+@keyframes slide-up-fade {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slide-up-fade {
+    animation: slide-up-fade 0.25s ease-out forwards;
+}

@@ -90,7 +90,7 @@ function TaskModal({ isOpen, task, onClose, onSave, onDelete }: TaskModalProps) 
     return (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
             <div
-                className="w-full max-w-lg bg-[#1C1C1E] rounded-t-3xl sm:rounded-3xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto"
+                className="w-full max-w-lg bg-[#1C1C1E] rounded-t-3xl sm:rounded-3xl p-6 animate-slide-up-fade max-h-[90vh] overflow-y-auto"
                 onClick={e => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between mb-6">

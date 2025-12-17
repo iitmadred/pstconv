@@ -283,7 +283,7 @@ export function ProfileScreen() {
             {/* Avatar Color Picker Modal */}
             {activeModal === 'avatar' && (
                 <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 animate-fade-in">
-                    <div ref={modalRef} className="w-full max-w-md bg-[#1C1C1E] rounded-3xl p-6 animate-slide-up">
+                    <div ref={modalRef} className="w-full max-w-md bg-[#1C1C1E] rounded-3xl p-6 animate-slide-up-fade">
                         <h2 className="text-xl font-bold mb-4">Choose Avatar Color</h2>
                         <div className="grid grid-cols-4 gap-4">
                             {AVATAR_COLORS.map((color, idx) => (
@@ -313,7 +313,7 @@ export function ProfileScreen() {
             {/* Account Modal */}
             {activeModal === 'account' && (
                 <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 animate-fade-in">
-                    <div ref={modalRef} className="w-full max-w-md bg-[#1C1C1E] rounded-3xl p-6 max-h-[90vh] overflow-y-auto animate-slide-up">
+                    <div ref={modalRef} className="w-full max-w-md bg-[#1C1C1E] rounded-3xl p-6 max-h-[90vh] overflow-y-auto animate-slide-up-fade">
                         <h2 className="text-xl font-bold mb-4">Account Settings</h2>
 
                         {/* Name */}
@@ -434,7 +434,7 @@ export function ProfileScreen() {
             {/* Settings Modal */}
             {activeModal === 'settings' && (
                 <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 animate-fade-in">
-                    <div ref={modalRef} className="w-full max-w-md bg-[#1C1C1E] rounded-3xl p-6 max-h-[90vh] overflow-y-auto animate-slide-up">
+                    <div ref={modalRef} className="w-full max-w-md bg-[#1C1C1E] rounded-3xl p-6 max-h-[90vh] overflow-y-auto animate-slide-up-fade">
                         <h2 className="text-xl font-bold mb-4">Settings</h2>
 
                         {/* Theme Toggle */}
@@ -555,7 +555,7 @@ export function ProfileScreen() {
             {/* Notifications Modal */}
             {activeModal === 'notifications' && (
                 <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 animate-fade-in">
-                    <div ref={modalRef} className="w-full max-w-md bg-[#1C1C1E] rounded-3xl p-6 animate-slide-up">
+                    <div ref={modalRef} className="w-full max-w-md bg-[#1C1C1E] rounded-3xl p-6 animate-slide-up-fade">
                         <h2 className="text-xl font-bold mb-4">Notifications</h2>
 
                         {/* Browser Notifications */}
@@ -634,7 +634,7 @@ export function ProfileScreen() {
             {/* Help Center Modal */}
             {activeModal === 'help' && (
                 <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 animate-fade-in">
-                    <div ref={modalRef} className="w-full max-w-md bg-[#1C1C1E] rounded-3xl p-6 max-h-[90vh] overflow-y-auto animate-slide-up">
+                    <div ref={modalRef} className="w-full max-w-md bg-[#1C1C1E] rounded-3xl p-6 max-h-[90vh] overflow-y-auto animate-slide-up-fade">
                         <h2 className="text-xl font-bold mb-4">Help Center</h2>
 
                         <div className="space-y-2">
